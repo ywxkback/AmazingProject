@@ -94,3 +94,43 @@ PS：不保证回答正确。
 
 1. 调用全局 operator new 分配空间（也可以使用自定义的 operator new）
 2. 在该空间上调用构造函数构造一个对象
+
+## 什么是完美转发？
+
+完美转发是指模板函数内部调用其他函数时，其类型不会改变。
+
+```c++
+// function with lvalue and rvalue reference overloads:
+void overloaded (const int& x) {std::cout << "[lvalue]";}
+void overloaded (int&& x) {std::cout << "[rvalue]";}
+
+// function template taking rvalue reference to deduced type:
+template <class T> 
+void fn (T&& x) {
+  overloaded (x);                   // always an lvalue
+  overloaded (std::forward<T>(x));  // rvalue if argument is rvalue
+}
+
+int main () {
+  int a;
+
+  std::cout << "calling fn with lvalue: ";
+  fn (a);
+  std::cout << '\n';
+
+  std::cout << "calling fn with rvalue: ";
+  fn (0);
+  std::cout << '\n';
+
+  return 0;
+}
+```
+
+结果是：
+
+```
+calling fn with lvalue: [lvalue][lvalue]
+calling fn with rvalue: [lvalue][rvalue]
+```
+
+
